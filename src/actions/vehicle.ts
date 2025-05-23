@@ -5,12 +5,15 @@ import pool from '@/lib/db';
 import { Vehicle } from '@/types/vehicle';
 import { RowDataPacket } from 'mysql2';
 
+/**
+ * Inserts a new vehicle with a reference to course_id
+ */
 export async function insertVehicle(
-  formData: FormData
+  formData: FormData,
+  courseId: number
 ): Promise<{ success: boolean; message?: string }> {
   const newVehicle = {
     studentName: formData.get('student_name') as string,
-    course: formData.get('course') as string,
     vehicleType: formData.get('vehicle_type') as string,
     registeredOwner: formData.get('registered_owner') as string,
     plateNumber: formData.get('plate_number') as string,
@@ -28,10 +31,12 @@ export async function insertVehicle(
     }
 
     await pool.query(
-      'INSERT INTO student_vehicle_info (student_name, course, vehicle_type, registered_owner, plate_number, license_number) VALUES (?, ?, ?, ?, ?, ?)',
+      `INSERT INTO student_vehicle_info 
+      (student_name, course_id, vehicle_type, registered_owner, plate_number, license_number) 
+      VALUES (?, ?, ?, ?, ?, ?)`,
       [
         newVehicle.studentName,
-        newVehicle.course,
+        courseId,
         newVehicle.vehicleType,
         newVehicle.registeredOwner,
         newVehicle.plateNumber,
@@ -47,15 +52,27 @@ export async function insertVehicle(
   }
 }
 
-export async function getVehicles() {
-  const [rows] = await pool.query('SELECT * FROM student_vehicle_info');
+/**
+ * Gets all vehicles, or only for a specific course ID if provided
+ */
+export async function getVehicles(courseId?: number) {
+  const query = courseId
+    ? 'SELECT * FROM student_vehicle_info WHERE course_id = ?'
+    : 'SELECT * FROM student_vehicle_info';
+  const [rows] = await pool.query(query, courseId ? [courseId] : []);
   return rows as Vehicle[];
 }
 
-export async function updateVehicle(id: number, formData: FormData) {
+/**
+ * Updates a vehicle entry
+ */
+export async function updateVehicle(
+  id: number,
+  formData: FormData,
+  courseId: number
+) {
   const updatedVehicle = {
     studentName: formData.get('student_name') as string,
-    course: formData.get('course') as string,
     vehicleType: formData.get('vehicle_type') as string,
     registeredOwner: formData.get('registered_owner') as string,
     plateNumber: formData.get('plate_number') as string,
@@ -63,10 +80,12 @@ export async function updateVehicle(id: number, formData: FormData) {
   };
 
   await pool.query(
-    'UPDATE student_vehicle_info SET student_name = ?, course = ?, vehicle_type = ?, registered_owner = ?, plate_number = ?, license_number = ? WHERE id = ?',
+    `UPDATE student_vehicle_info 
+     SET student_name = ?, course_id = ?, vehicle_type = ?, registered_owner = ?, plate_number = ?, license_number = ?
+     WHERE id = ?`,
     [
       updatedVehicle.studentName,
-      updatedVehicle.course,
+      courseId,
       updatedVehicle.vehicleType,
       updatedVehicle.registeredOwner,
       updatedVehicle.plateNumber,
@@ -78,6 +97,9 @@ export async function updateVehicle(id: number, formData: FormData) {
   revalidatePath('/dashboard');
 }
 
+/**
+ * Deletes a vehicle entry
+ */
 export async function deleteVehicle(id: number) {
   await pool.query('DELETE FROM student_vehicle_info WHERE id = ?', [id]);
   revalidatePath('/dashboard');
