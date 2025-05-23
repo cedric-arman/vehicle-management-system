@@ -1,0 +1,9 @@
+CREATE TABLE student_vehicle_info (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  student_name VARCHAR(100) NOT NULL,
+  course VARCHAR(100),
+  vehicle_type VARCHAR(50),
+  registered_owner VARCHAR(100),
+  plate_number VARCHAR(20),
+  license_number VARCHAR(50)
+);
