@@ -40,7 +40,6 @@ export default function Page() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isFetching, setIsFetching] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [formDataState, setFormDataState] = useState({
     student_name: '',
@@ -66,7 +65,6 @@ export default function Page() {
 
   async function handleSubmit(formData: FormData) {
     if (!courseId) return;
-    setIsSaving(true);
 
     startTransition(async () => {
       if (editingVehicle) {
@@ -81,7 +79,6 @@ export default function Page() {
             timer: 2000,
             showConfirmButton: false,
           });
-          setIsSaving(false);
           return;
         }
       }
@@ -90,8 +87,6 @@ export default function Page() {
       setEditingVehicle(null);
       const data = await getVehicles(courseId);
       setVehicles(data);
-
-      setIsSaving(false);
 
       Swal.fire({
         icon: 'success',
@@ -212,8 +207,8 @@ export default function Page() {
                 />
               </div>
 
-              <Button type="submit" disabled={isSaving}>
-                {isSaving
+              <Button type="submit" disabled={isPending}>
+                {isPending
                   ? 'Saving...'
                   : editingVehicle
                   ? 'Update Vehicle'
@@ -255,6 +250,7 @@ export default function Page() {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(vehicle.id)}
+                      disabled={isPending}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
